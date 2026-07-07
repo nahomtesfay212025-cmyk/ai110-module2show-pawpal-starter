@@ -68,33 +68,52 @@ if owner.pets:
     selected_pet_name = st.selectbox("Assign task to pet", pet_names)
     selected_pet = next(p for p in owner.pets if p.name == selected_pet_name)
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         task_title = st.text_input("Task title", value="Morning walk")
     with col2:
         duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
     with col3:
         priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
+    with col4:
+        preferred_time = st.text_input("Preferred time (HH:MM, optional)", value="")
 
     if st.button("Add task"):
         selected_pet.add_task(
-            Task(description=task_title, duration=int(duration), priority=priority)
+            Task(
+                description=task_title,
+                duration=int(duration),
+                priority=priority,
+                preferred_time=preferred_time or None,
+            )
         )
 
+    scheduler = Scheduler(owner)
+
     if owner.all_tasks():
-        st.write("Current tasks:")
+        st.write("Current tasks (sorted by preferred time):")
+        sorted_tasks = scheduler.sort_by_time(owner.all_tasks())
+        pet_by_task_id = {id(t): pet.name for pet in owner.pets for t in pet.tasks}
         st.table(
             [
                 {
-                    "pet": pet.name,
+                    "pet": pet_by_task_id[id(task)],
                     "task": task.description,
                     "duration_minutes": task.duration,
                     "priority": task.priority,
+                    "preferred_time": task.preferred_time or "-",
+                    "completed": task.completed,
                 }
-                for pet in owner.pets
-                for task in pet.tasks
+                for task in sorted_tasks
             ]
         )
+
+        conflicts = scheduler.detect_conflicts()
+        if conflicts:
+            for warning in conflicts:
+                st.warning(warning)
+        else:
+            st.success("No scheduling conflicts detected.")
     else:
         st.info("No tasks yet. Add one above.")
 else:
@@ -110,14 +129,28 @@ time_available = st.number_input("Time available (minutes)", min_value=1, max_va
 if st.button("Generate schedule"):
     scheduler = Scheduler(owner)
     plan = scheduler.generate_daily_plan(time_available=int(time_available))
+    plan_by_priority = scheduler.sort_by_priority(plan)
 
-    if plan:
-        st.write("Today's Schedule:")
+    if plan_by_priority:
+        used_time = sum(t.duration for t in plan_by_priority)
+        st.success(f"Scheduled {len(plan_by_priority)} task(s), using {used_time} of {int(time_available)} minutes.")
+
+        st.write("Today's Schedule (priority order):")
         st.table(
             [
-                {"task": t.description, "duration_minutes": t.duration, "priority": t.priority}
-                for t in plan
+                {
+                    "task": t.description,
+                    "duration_minutes": t.duration,
+                    "priority": t.priority,
+                    "preferred_time": t.preferred_time or "-",
+                }
+                for t in plan_by_priority
             ]
         )
+
+        conflicts = scheduler.detect_conflicts()
+        if conflicts:
+            for warning in conflicts:
+                st.warning(warning)
     else:
         st.info("No tasks fit in the available time.")
