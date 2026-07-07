@@ -1,0 +1,34 @@
+classDiagram
+    class Owner {
+        +str name
+        +dict preferences
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +str breed
+        +Owner owner
+        +List~CareTask~ tasks
+    }
+
+    class CareTask {
+        +str name
+        +str category
+        +int duration
+        +str priority
+        +str preferred_time
+        +bool recurring
+    }
+
+    class TaskManager {
+        +List~CareTask~ tasks
+        +add_task(task: CareTask) None
+        +edit_task(task_id: str, updates: dict) None
+        +remove_task(task_id: str) None
+        +generate_plan(time_available: int) List~CareTask~
+    }
+
+    Owner "1" --> "1..*" Pet : owns
+    Pet "1" --> "1" TaskManager : has
+    TaskManager "1" --> "0..*" CareTask : manages

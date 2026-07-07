@@ -2,6 +2,19 @@
 
 ## 1. System Design
 
+The design centers on three core actions a user performs:
+
+1. **Enter/manage owner + pet info** — create a profile for the owner and their pet(s).
+2. **Add/edit care tasks** — input tasks (walks, feeding, meds, grooming, etc.) with duration, priority, and constraints (time available, preferences).
+3. **Generate and view a daily plan** — run the scheduling logic to produce a plan and display it with reasoning.
+
+These actions map to four core classes:
+
+- **`Owner`** — the pet owner's basic info (name, preferences).
+- **`Pet`** — a pet's info (name, species/breed) linked to an `Owner`, and the pet's collection of `CareTask`s.
+- **`CareTask`** — a single care task's data: name, category (walk/feeding/meds/grooming/enrichment), duration, priority, and constraints (preferred time, recurring, etc.).
+- **`TaskManager`** — manages a pet's tasks (`add_task()`, `edit_task()`, `remove_task()`) and hands them off, with constraints applied, to the scheduling logic that generates the daily plan.
+
 **a. Initial design**
 
 - Briefly describe your initial UML design.
