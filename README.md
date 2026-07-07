@@ -73,14 +73,13 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_priority()`, `Scheduler.sort_by_time()` | Sorts tasks by priority (high → low) or by `preferred_time` (untimed tasks sorted last) |
+| Filtering | `Scheduler.filter_tasks(completed=..., pet_name=...)` | Filters tasks across all pets by completion status, pet name, or both |
+| Conflict handling | `Scheduler.detect_conflicts()` | Lightweight check: groups pending tasks by exact `preferred_time` and returns a warning message for any time slot shared by 2+ tasks, across the same or different pets. Does not check for overlapping durations (see `reflection.md` for that tradeoff) |
+| Recurring tasks | `Task.next_occurrence()`, `Pet.complete_task()` | Completing a task via `Pet.complete_task()` marks it done and, if its `frequency` is `"daily"` or `"weekly"`, automatically appends a fresh incomplete copy for the next occurrence |
+| Daily plan generation | `Scheduler.generate_daily_plan()`, `Scheduler.plan_by_pet()` | Builds a priority-ordered plan that backfills smaller lower-priority tasks into leftover time within a given time budget, and can group the result by pet |
 
 ## 📸 Demo Walkthrough
 

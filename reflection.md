@@ -10,15 +10,16 @@ The design centers on three core actions a user performs:
 
 These actions map to four core classes:
 
-- **`Owner`** — the pet owner's basic info (name, preferences).
-- **`Pet`** — a pet's info (name, species/breed) linked to an `Owner`, and the pet's collection of `CareTask`s.
-- **`CareTask`** — a single care task's data: name, category (walk/feeding/meds/grooming/enrichment), duration, priority, and constraints (preferred time, recurring, etc.).
-- **`TaskManager`** — manages a pet's tasks (`add_task()`, `edit_task()`, `remove_task()`) and hands them off, with constraints applied, to the scheduling logic that generates the daily plan.
+
 
 **a. Initial design**
 
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
+- **`Owner`** — the pet owner's basic info (name, preferences).
+- **`Pet`** — a pet's info (name, species/breed) linked to an `Owner`, and the pet's collection of `CareTask`s.
+- **`CareTask`** — a single care task's data: name, category (walk/feeding/meds/grooming/enrichment), duration, priority, and constraints (preferred time, recurring, etc.).
+- **`TaskManager`** — manages a pet's tasks (`add_task()`, `edit_task()`, `remove_task()`) and hands them off, with constraints applied, to the scheduling logic that generates the daily plan.
 
 **b. Design changes**
 
@@ -38,6 +39,10 @@ These actions map to four core classes:
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+`Scheduler.detect_conflicts()` only checks for exact `preferred_time` matches (e.g. two tasks both set to `"12:30"`) rather than checking whether tasks' durations actually overlap. A 20-minute task starting at `12:30` and a 15-minute task starting at `12:40` would genuinely overlap in real time, but since their `preferred_time` values differ, my scheduler would miss that conflict. True overlap detection would require converting each task into a start/end interval and checking pairwise interval intersection, which is more code and harder to reason about for a small daily task list.
+
+This tradeoff is reasonable for this scenario because pet care tasks are typically scheduled to round time slots (e.g. "8:00am walk," "6:00pm feeding") rather than back-to-back with tight margins, so exact-match conflicts are the far more common and higher-value case to catch. It keeps the conflict check simple (a single dictionary grouped by time) and avoids false positives from over-strict interval math on approximate preferred times. If this app needed precise back-to-back scheduling (e.g. multiple pet sitters on a tight route), true interval overlap detection would be worth the added complexity.
 
 ---
 
