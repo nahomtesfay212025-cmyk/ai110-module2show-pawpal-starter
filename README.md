@@ -58,18 +58,34 @@ Playtime (15 min) [priority: low]
 ## 🧪 Testing PawPal+
 
 ```bash
-# Run the full test suite:
-pytest
-
-# Run with coverage:
-pytest --cov
+python -m pytest
 ```
+
+The suite in `tests/test_pawpal.py` covers:
+
+- **Sorting correctness** – tasks are returned in chronological order by `preferred_time`, untimed tasks sort last, and unknown priority values fall back to lowest priority without crashing.
+- **Recurring tasks** – completing a `daily`/`weekly` task automatically schedules its next occurrence as a fresh, incomplete copy; non-recurring frequencies do not spawn a new task.
+- **Conflict detection** – the `Scheduler` flags duplicate `preferred_time` slots across pets, within a single pet, and across 3+ tasks, while ignoring completed or untimed tasks.
+- **Daily plan generation** – the greedy time-budget backfill respects the time available (including `0`/negative and exact-fit edge cases), prioritizes high-priority tasks first, and preserves stable ordering among equal-priority tasks.
+- **Filtering and grouping** – `filter_tasks()` and `plan_by_pet()` behave correctly with unknown pet names and with duplicate (value-equal) tasks across different pets.
 
 Sample test output:
 
 ```
-# Paste your pytest output here
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0
+rootdir: /Users/nahomtesfay/ai110-module2show-pawpal-starter
+plugins: anyio-4.13.0
+collected 24 items
+
+tests/test_pawpal.py ........................                            [100%]
+
+============================== 24 passed in 0.01s ==============================
 ```
+
+**Confidence Level:** ⭐⭐⭐⭐☆ (4/5)
+
+All 24 tests pass, covering the core sorting, recurrence, and conflict-detection logic plus several edge cases (zero/negative time budgets, duplicate tasks, unknown priorities). I'm holding back a star because testing surfaced two behaviors worth revisiting before I'd call this production-ready: `sort_by_time` compares `preferred_time` as a raw string rather than a real time, so unpadded hours like `"9:00"` sort after `"10:00"`; and `complete_task()` has no guard against being called on an already-completed task, so it will spawn a duplicate recurring occurrence if triggered twice.
 
 ## 📐 Smarter Scheduling
 
